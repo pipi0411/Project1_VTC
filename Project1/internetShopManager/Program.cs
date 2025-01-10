@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace InternetShopManager
 {
@@ -15,6 +16,8 @@ namespace InternetShopManager
         static void Main(string[] args)
         {
             Console.Title = "Login Console Application";
+            DisplayNetcoLogo(); // Hiển thị logo NETCO
+
             string username = string.Empty;
             string role = string.Empty;
 
@@ -23,6 +26,7 @@ namespace InternetShopManager
             while (!isAuthenticated)
             {
                 Console.Clear();
+                DisplayNetcoLogo(); // Hiển thị logo mỗi lần làm mới
                 DisplayLoginScreen();
 
                 Console.Write("Username: ");
@@ -37,6 +41,8 @@ namespace InternetShopManager
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine("\nLogin successfully! Role: {0}", role);
                     Console.ResetColor();
+                    Thread.Sleep(1500);
+
                     isAuthenticated = true;
                 }
                 else
@@ -58,6 +64,23 @@ namespace InternetShopManager
             {
                 DisplayUserMenu();
             }
+        }
+
+        static void DisplayNetcoLogo()
+        {
+            Console.ForegroundColor = ConsoleColor.Cyan;
+
+            Console.WriteLine("******************************************************");
+            Console.WriteLine("*                                                    *");
+            Console.WriteLine("*    ███    ██ ███████ ████████  ██████   ██████     *");
+            Console.WriteLine("*    ████   ██ ██         ██    ██     █ ██    ██    *");
+            Console.WriteLine("*    ██ ██  ██ ███████    ██    ██       ██    ██    *");
+            Console.WriteLine("*    ██  ██ ██ ██         ██    ██     █ ██    ██    *");
+            Console.WriteLine("*    ██   ████ ███████    ██     ██████   ██████     *");
+            Console.WriteLine("*                                                    *");
+            Console.WriteLine("******************************************************");
+
+            Console.ResetColor();
         }
 
         static void DisplayLoginScreen()
@@ -110,6 +133,7 @@ namespace InternetShopManager
         static void DisplayAdminMenu()
         {
             Console.Clear();
+            DisplayNetcoLogo(); // Hiển thị logo NETCO
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine("****************************************");
             Console.WriteLine("* Welcome to Internet Shop Manager v1.0 *");
@@ -122,7 +146,8 @@ namespace InternetShopManager
                 "1. Search Computers",
                 "2. Search User",
                 "3. Register User",
-                "4. Logout"
+                "4. Update User",
+                "5. Logout"
             };
 
             foreach (var item in menuItems)
@@ -139,6 +164,7 @@ namespace InternetShopManager
         static void DisplayUserMenu()
         {
             Console.Clear();
+            DisplayNetcoLogo(); // Hiển thị logo NETCO
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine("****************************************");
             Console.WriteLine("* Welcome to Internet CO v1.0          *");

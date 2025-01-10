@@ -12,3 +12,4 @@ D:\Project_VTC\project1\internetShopManager\obj\Debug\net8.0\refint\internetShop
 D:\Project_VTC\project1\internetShopManager\obj\Debug\net8.0\internetShopManager.pdb
 D:\Project_VTC\project1\internetShopManager\obj\Debug\net8.0\internetShopManager.genruntimeconfig.cache
 D:\Project_VTC\project1\internetShopManager\obj\Debug\net8.0\ref\internetShopManager.dll
+D:\Project_VTC\project1\internetShopManager\obj\Debug\net8.0\internetShopManager.sourcelink.json
