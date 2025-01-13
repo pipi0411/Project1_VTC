@@ -1,0 +1,15 @@
+D:\Project_VTC\client\netcoClient\bin\Debug\net8.0\netcoClient.exe
+D:\Project_VTC\client\netcoClient\bin\Debug\net8.0\netcoClient.deps.json
+D:\Project_VTC\client\netcoClient\bin\Debug\net8.0\netcoClient.runtimeconfig.json
+D:\Project_VTC\client\netcoClient\bin\Debug\net8.0\netcoClient.dll
+D:\Project_VTC\client\netcoClient\bin\Debug\net8.0\netcoClient.pdb
+D:\Project_VTC\client\netcoClient\obj\Debug\net8.0\netcoClient.GeneratedMSBuildEditorConfig.editorconfig
+D:\Project_VTC\client\netcoClient\obj\Debug\net8.0\netcoClient.AssemblyInfoInputs.cache
+D:\Project_VTC\client\netcoClient\obj\Debug\net8.0\netcoClient.AssemblyInfo.cs
+D:\Project_VTC\client\netcoClient\obj\Debug\net8.0\netcoClient.csproj.CoreCompileInputs.cache
+D:\Project_VTC\client\netcoClient\obj\Debug\net8.0\netcoClient.sourcelink.json
+D:\Project_VTC\client\netcoClient\obj\Debug\net8.0\netcoClient.dll
+D:\Project_VTC\client\netcoClient\obj\Debug\net8.0\refint\netcoClient.dll
+D:\Project_VTC\client\netcoClient\obj\Debug\net8.0\netcoClient.pdb
+D:\Project_VTC\client\netcoClient\obj\Debug\net8.0\netcoClient.genruntimeconfig.cache
+D:\Project_VTC\client\netcoClient\obj\Debug\net8.0\ref\netcoClient.dll

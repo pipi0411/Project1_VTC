@@ -1,0 +1,15 @@
+D:\Project_VTC\server\netcoServer\bin\Debug\net8.0\netcoServer.exe
+D:\Project_VTC\server\netcoServer\bin\Debug\net8.0\netcoServer.deps.json
+D:\Project_VTC\server\netcoServer\bin\Debug\net8.0\netcoServer.runtimeconfig.json
+D:\Project_VTC\server\netcoServer\bin\Debug\net8.0\netcoServer.dll
+D:\Project_VTC\server\netcoServer\bin\Debug\net8.0\netcoServer.pdb
+D:\Project_VTC\server\netcoServer\obj\Debug\net8.0\netcoServer.GeneratedMSBuildEditorConfig.editorconfig
+D:\Project_VTC\server\netcoServer\obj\Debug\net8.0\netcoServer.AssemblyInfoInputs.cache
+D:\Project_VTC\server\netcoServer\obj\Debug\net8.0\netcoServer.AssemblyInfo.cs
+D:\Project_VTC\server\netcoServer\obj\Debug\net8.0\netcoServer.csproj.CoreCompileInputs.cache
+D:\Project_VTC\server\netcoServer\obj\Debug\net8.0\netcoServer.sourcelink.json
+D:\Project_VTC\server\netcoServer\obj\Debug\net8.0\netcoServer.dll
+D:\Project_VTC\server\netcoServer\obj\Debug\net8.0\refint\netcoServer.dll
+D:\Project_VTC\server\netcoServer\obj\Debug\net8.0\netcoServer.pdb
+D:\Project_VTC\server\netcoServer\obj\Debug\net8.0\netcoServer.genruntimeconfig.cache
+D:\Project_VTC\server\netcoServer\obj\Debug\net8.0\ref\netcoServer.dll
