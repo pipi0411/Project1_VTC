@@ -87,8 +87,18 @@ namespace TCPClient
                     Console.Write("Enter username: ");
                     string username = Console.ReadLine();
 
-                    Console.Write("Enter password: ");
+                    Console.Write("Enter password (min 8 characters): ");
                     string password = ReadPassword();
+
+                    // Kiểm tra mật khẩu đủ điều kiện
+                    if (password.Length < 8)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("\nPassword must be at least 8 characters long.");
+                        Console.ResetColor();
+                        System.Threading.Thread.Sleep(2000);
+                        continue;
+                    }
 
                     // Gửi thông tin đăng nhập tới server
                     var loginRequest = new { Username = username, Password = password };
@@ -114,6 +124,7 @@ namespace TCPClient
                         Console.WriteLine($"\nLogin successful! Role: {loginResponse.Role}");
                         Console.ResetColor();
                         role = loginResponse.Role;
+                        System.Threading.Thread.Sleep(1500);
                         isAuthenticated = true;
                     }
                     else

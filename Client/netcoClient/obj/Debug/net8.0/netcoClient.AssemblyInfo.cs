@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("netcoClient")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+551658238a2b6559aa18a3ac47a0a439ab099334")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2bab4a181b89c62290adc0ab0c837981b3dc9cbe")]
 [assembly: System.Reflection.AssemblyProductAttribute("netcoClient")]
 [assembly: System.Reflection.AssemblyTitleAttribute("netcoClient")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
