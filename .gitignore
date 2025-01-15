@@ -1,0 +1,10 @@
+/.vscode
+Netco.sln
+/BL/bin
+/BL/obj
+/ConsolePL/bin
+/ConsolePL/obj
+/DAL/bin
+/DAL/obj
+/Persistence/bin
+/Persistence/obj
