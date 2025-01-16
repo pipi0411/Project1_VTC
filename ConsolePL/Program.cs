@@ -312,8 +312,7 @@ namespace ConsolePL
             Console.WriteLine("2. End Session");
             Console.WriteLine("3. Add Money");
             Console.WriteLine("4. Play Game");
-            Console.WriteLine("5. Listen to Music");
-            Console.WriteLine("6. Logout");
+            Console.WriteLine("5. Logout");
             Console.Write("Enter your choice: ");
             string choice = Console.ReadLine();
     
@@ -411,11 +410,6 @@ namespace ConsolePL
                 System.Threading.Thread.Sleep(2000);
             }
             else if (choice == "5")
-            {
-                Console.WriteLine("\nListening to Music...");
-                System.Threading.Thread.Sleep(1500);
-            }
-            else if (choice == "6")
             {
             if (sessionActive)
             {
