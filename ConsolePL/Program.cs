@@ -3,6 +3,7 @@ using System.Text;
 using System.Threading;
 using BL;
 using System.Timers;
+using Persistence;
 
 
 namespace ConsolePL
@@ -11,6 +12,7 @@ namespace ConsolePL
     {
         static void Main(string[] args)
         {
+            var adminService = new AdminService();
             try
             {
                 while (true)
@@ -55,6 +57,7 @@ namespace ConsolePL
         static void Login()
         {
             var userService = new UserService();
+            var adminService = new AdminService();
 
             Console.Write("Enter username: ");
             string username = Console.ReadLine();
@@ -108,7 +111,7 @@ namespace ConsolePL
                    Console.ResetColor();
                    AddMoney(username, userService);
                 }
-                ShowMenu(result.Data, username, userService);
+                ShowMenu(result.Data, username, userService, adminService);
             }
             else
             {
@@ -150,17 +153,18 @@ namespace ConsolePL
     }
 
 
-        static void ShowMenu(string role, string username, UserService userService)
+        static void ShowMenu(string role, string username, UserService userService, AdminService adminService )
         {
             while (true)
             {
                 if (role == "admin")
                 {
-                    ShowAdminMenu();
+                    ShowAdminMenu(adminService);
                 }
                 else if (role == "user")
                 {
-                    ShowUserMenu(role, username, userService);
+                    userService.SelectComputer(username);
+                    ShowUserMenu(role,username, userService);
                 }
                 else
                 {
@@ -176,58 +180,76 @@ namespace ConsolePL
             }
         }
 
-    static void ShowAdminMenu()
-{
+    static void ShowAdminMenu(AdminService adminService)
+   {
     var settingsService = new SettingsService();
-
-    Console.Clear();
-    DisplayNetcoLogo();
-    Console.ForegroundColor = ConsoleColor.Cyan;
-    Console.WriteLine("****************************************");
-    Console.WriteLine("* Welcome to Internet Shop Manager v1.0 *");
-    Console.WriteLine("*            Admin Menu                 *");
-    Console.WriteLine("****************************************");
-    Console.ResetColor();
-
-    Console.WriteLine("1. Update Rate Per Hour");
-    Console.WriteLine("2. Logout");
-    Console.Write("Enter your choice: ");
-    string choice = Console.ReadLine();
-
-    if (choice == "1")
+    bool isRunning = true;
+    while (isRunning)
     {
-        Console.Write("Enter new rate per hour (VND): ");
-        if (decimal.TryParse(Console.ReadLine(), out decimal newRate) && newRate > 0)
+        Console.Clear();
+        DisplayNetcoLogo();
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("****************************************");
+        Console.WriteLine("* Welcome to Internet Shop Manager v1.0 *");
+        Console.WriteLine("*            Admin Menu                 *");
+        Console.WriteLine("****************************************");
+        Console.ResetColor();
+
+        Console.WriteLine("1. Update Rate Per Hour");
+        Console.WriteLine("2. Search Computers");
+        Console.WriteLine("3. Display All Computers");
+        Console.WriteLine("4. Logout");
+        Console.Write("Enter your choice: ");
+        string choice = Console.ReadLine();
+        switch (choice)
         {
-            try
-            {
+            case "1":
+                Console.Write("Enter new rate per hour (VND): ");
+                if (decimal.TryParse(Console.ReadLine(), out decimal newRate) && newRate > 0)
+                {
+                try
+                {
                 settingsService.UpdateRatePerHour(newRate);
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"\nSuccessfully updated rate per hour to {newRate} VND.");
-            }
-            catch (Exception ex)
-            {
+                }
+                catch (Exception ex)
+                {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"\nError updating rate: {ex.Message}");
-            }
-            finally
-            {
+                }
+                finally
+                {
                 Console.ResetColor();
-            }
+                }
+                }
+                else
+                {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("\nInvalid rate. Please try again.");
+                Console.ResetColor();
+                }
+                System.Threading.Thread.Sleep(1500);
+                break;
+            case "2":
+                adminService.SearchComputers();
+                break;
+            case "3":
+                adminService.DisplayAllComputers();
+                break;
+            case "4":
+                Console.WriteLine("Logging out...");
+                isRunning = false;
+                break;
+            default:
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Invalid option. Please try again.");
+                Console.ResetColor();
+                System.Threading.Thread.Sleep(1500);
+                break;
         }
-        else
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("\nInvalid rate. Please try again.");
-            Console.ResetColor();
-        }
-        System.Threading.Thread.Sleep(1500);
     }
-    else if (choice == "2")
-    {
-        Console.WriteLine("Logging out...");
-    }
-}
+   }
 
 
     static void ShowUserMenu(string role, string username, UserService userService)
@@ -374,6 +396,7 @@ namespace ConsolePL
             }
             else
             {
+                userService.Logout(username);
                 Console.WriteLine("Logging out...");
                 break;
             }
