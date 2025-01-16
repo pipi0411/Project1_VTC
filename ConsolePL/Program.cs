@@ -124,8 +124,8 @@ namespace ConsolePL
 
     static void AddMoney(string username, UserService userService)
     {
-    Console.Write("Enter amount to add (10,000 VND per transaction): ");
-    if (decimal.TryParse(Console.ReadLine(), out decimal amount) && amount == 10000)
+    Console.Write("Enter amount to add (<= 100,000 VND transaction): ");
+    if (decimal.TryParse(Console.ReadLine(), out decimal amount) && amount <= 100000)
     {
         try
         {
@@ -146,7 +146,7 @@ namespace ConsolePL
     else
     {
         Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine("\nInvalid amount. Please enter exactly 10,000 VND.");
+        Console.WriteLine("\nInvalid amount. Please enter exactly 100,000 VND.");
         Console.ResetColor();
     }
     System.Threading.Thread.Sleep(1500);
@@ -198,7 +198,9 @@ namespace ConsolePL
         Console.WriteLine("1. Update Rate Per Hour");
         Console.WriteLine("2. Search Computers");
         Console.WriteLine("3. Display All Computers");
-        Console.WriteLine("4. Logout");
+        Console.WriteLine("4. Search User");
+        Console.WriteLine("5. Register User");
+        Console.WriteLine("6. Logout");
         Console.Write("Enter your choice: ");
         string choice = Console.ReadLine();
         switch (choice)
@@ -238,6 +240,12 @@ namespace ConsolePL
                 adminService.DisplayAllComputers();
                 break;
             case "4":
+                adminService.SearchUsers();
+                break;
+            case "5":
+                adminService.RegisterUser();
+                break;
+            case "6":
                 Console.WriteLine("Logging out...");
                 isRunning = false;
                 break;
@@ -301,9 +309,10 @@ namespace ConsolePL
     
             Console.WriteLine("1. Start Session");
             Console.WriteLine("2. End Session");
-            Console.WriteLine("3. Play Game");
-            Console.WriteLine("4. Listen to Music");
-            Console.WriteLine("5. Logout");
+            Console.WriteLine("3. Add Money");
+            Console.WriteLine("4. Play Game");
+            Console.WriteLine("5. Listen to Music");
+            Console.WriteLine("6. Logout");
             Console.Write("Enter your choice: ");
             string choice = Console.ReadLine();
     
@@ -377,15 +386,19 @@ namespace ConsolePL
             }
             else if (choice == "3")
             {
+                AddMoney(username, userService);
+            }
+            else if (choice == "4")
+            {
                 Console.WriteLine("\nPlaying Game...");
                 System.Threading.Thread.Sleep(1500);
             }
-            else if (choice == "4")
+            else if (choice == "5")
             {
                 Console.WriteLine("\nListening to Music...");
                 System.Threading.Thread.Sleep(1500);
             }
-            else if (choice == "5")
+            else if (choice == "6")
             {
             if (sessionActive)
             {

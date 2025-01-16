@@ -62,6 +62,44 @@ namespace BL
             throw new Exception("User not found.");
         }
 
+        public User GetUserByUsername(string username)
+        {
+            using var connection = _dbContext.GetConnection();
+            connection.Open();
+
+            const string query = "SELECT * FROM users WHERE username = @username";
+            using var command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@username", username);
+
+            using var reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+            return new User
+            {
+              Id = reader.GetInt32("id"),
+              Username = reader.GetString("username"),
+              Balance = reader.GetDecimal("balance"),
+              ComputerId = reader.IsDBNull(reader.GetOrdinal("computer_id")) ? 0 : reader.GetInt32("computer_id")
+            };
+            }
+
+            return null;
+        }
+
+        public void RegisterUser(User user)
+        {
+            using var connection = _dbContext.GetConnection();
+            connection.Open();
+
+            const string query = "INSERT INTO users (username, password, role) VALUES (@username, @password, @role)";
+            using var command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@username", user.Username);
+            command.Parameters.AddWithValue("@password", user.Password);
+            command.Parameters.AddWithValue("@role", user.Role);
+
+            command.ExecuteNonQuery();
+        }
+
         public void SelectComputer(string username)
         {
             while (true)
@@ -86,6 +124,10 @@ namespace BL
                     computer.CurrentUser = username;
                     computer.OnTime = DateTime.Now;
                     computerService.UpdateComputer(computer);
+
+                    // Cập nhật ComputerId cho người dùng
+                    UpdateUserComputerId(username, id);
+
                     Console.WriteLine($"Computer {computer.Name} selected successfully.");
                     break;
                 }
@@ -116,6 +158,21 @@ namespace BL
                     break;
                 }
             }
+            // Đặt lại ComputerId của người dùng thành null hoặc giá trị mặc định
+            UpdateUserComputerId(username, null);
+        }
+
+        private void UpdateUserComputerId(string username, int? computerId)
+        {
+            using var connection = _dbContext.GetConnection();
+            connection.Open();
+
+            const string query = "UPDATE users SET computer_id = @computer_id WHERE username = @username";
+            using var command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@computer_id", computerId.HasValue ? (object)computerId.Value : DBNull.Value);
+            command.Parameters.AddWithValue("@username", username);
+
+            command.ExecuteNonQuery();
         }
 
     }

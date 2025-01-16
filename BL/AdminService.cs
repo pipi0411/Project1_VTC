@@ -1,13 +1,16 @@
 using System;
 using Persistence;
+using BL;
 
 public class AdminService
 {
     private ComputerService computerService;
+    private UserService userService;
 
     public AdminService()
     {
         computerService = new ComputerService();
+        userService = new UserService();
     }
 
     public void SearchComputers()
@@ -54,6 +57,76 @@ public class AdminService
             DisplayComputerDetails(computer);
             Console.WriteLine();
         }
+        Console.WriteLine("\nPress any key to return to the menu...");
+        Console.ReadKey();
+    }
+
+    public void SearchUsers()
+    {
+        Console.Write("Enter username to search: ");
+        string username = Console.ReadLine();
+        var user = userService.GetUserByUsername(username);
+        if (user != null)
+        {
+            DisplayUserDetails(user);
+        }
+        else
+        {
+            Console.WriteLine("User not found.");
+        }
+        Console.WriteLine("\nPress any key to return to the menu...");
+        Console.ReadKey();
+    }
+
+    private void DisplayUserDetails(User user)
+    {
+        Console.WriteLine($"ID: {user.Id}");
+        Console.WriteLine($"Name: {user.Username}");
+        Console.WriteLine($"Balance: {user.Balance} VND");
+        var computer = computerService.GetComputerById(user.ComputerId);
+        if (computer != null)
+        {
+            Console.WriteLine($"Computer: {computer.Name}");
+        }
+        else
+        {
+            Console.WriteLine("Computer: None");
+        }
+    }
+
+    public void RegisterUser()
+    {
+        Console.Write("Enter new username: ");
+        string username = Console.ReadLine();
+        if (userService.GetUserByUsername(username) != null)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\nUsername already exists.");
+            Console.ResetColor();
+            System.Threading.Thread.Sleep(1500);
+            return;
+        }
+
+        Console.Write("Enter password: ");
+        string password = Console.ReadLine();
+        if (password.Length < 8)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\nPassword must be at least 8 characters long.");
+            Console.ResetColor();
+            System.Threading.Thread.Sleep(1500);
+            return;
+        }
+        var user = new User
+        {
+            Username = username,
+            Password = password,
+            Role = "user" // Đặt vai trò mặc định là "user"
+        };
+        userService.RegisterUser(user);
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("\nUser registered successfully.");
+        
         Console.WriteLine("\nPress any key to return to the menu...");
         Console.ReadKey();
     }
