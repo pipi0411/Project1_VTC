@@ -4,6 +4,7 @@ using System.Threading;
 using BL;
 using System.Timers;
 using Persistence;
+using Games;
 
 
 namespace ConsolePL
@@ -390,8 +391,24 @@ namespace ConsolePL
             }
             else if (choice == "4")
             {
-                Console.WriteLine("\nPlaying Game...");
-                System.Threading.Thread.Sleep(1500);
+                Console.Clear();
+                Console.WriteLine("Starting Snake Game...");
+                System.Threading.Thread.Sleep(1000);
+
+                try
+                {
+                    var snakeGame = new SnakeGame();
+                    snakeGame.StartGame();
+                }
+                catch (Exception ex)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"\nError running Snake Game: {ex.Message}");
+                    Console.ResetColor();
+                }
+
+                Console.WriteLine("\nExiting Snake Game... Returning to User Menu...");
+                System.Threading.Thread.Sleep(2000);
             }
             else if (choice == "5")
             {
