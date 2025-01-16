@@ -20,6 +20,7 @@ namespace Games
 
         public void StartGame()
         {
+            Console.CursorVisible = false;
             string prompt = $"Select speed [1], [2] (default), or [3]: ";
             string? input;
             Console.Write(prompt);

@@ -13,6 +13,7 @@ namespace ConsolePL
     {
         static void Main(string[] args)
         {
+            Console.CursorVisible = false;
             var adminService = new AdminService();
             try
             {
