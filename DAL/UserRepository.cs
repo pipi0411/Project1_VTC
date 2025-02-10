@@ -11,25 +11,29 @@ namespace DAL
         {
             _dbContext = new UserDbContext();
         }
+public User GetUserByUsername(string username)
+{
+    using var connection = _dbContext.GetConnection();
+    connection.Open();
 
-        public (bool, string) ValidateLogin(string username, string password)
+    const string query = "SELECT id, username, password, role FROM users WHERE username = @username";
+    using var command = new MySqlCommand(query, connection);
+    command.Parameters.AddWithValue("@username", username);
+
+    using var reader = command.ExecuteReader();
+    if (reader.Read())
+    {
+        return new User
         {
-            using var connection = _dbContext.GetConnection();
-            connection.Open();
+            Id = reader.GetInt32("id"),
+            Username = reader.GetString("username"),
+            Password = reader.GetString("password"), // Lấy mật khẩu đã mã hóa
+            Role = reader.GetString("role")
+        };
+    }
 
-            const string query = "SELECT role FROM users WHERE username = @username AND password = @password";
-            using var command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@username", username);
-            command.Parameters.AddWithValue("@password", password);
-
-            using var reader = command.ExecuteReader();
-            if (reader.Read())
-            {
-                return (true, reader.GetString("role"));
-            }
-
-            return (false, null);
-        }
+    return null;
+}
 
         public decimal GetBalance(string username)
         {

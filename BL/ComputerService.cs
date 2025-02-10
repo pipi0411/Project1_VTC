@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using MySql.Data.MySqlClient;
 using Persistence;
 
+namespace BL 
+{
 public class ComputerService
 {
     private string connectionString;
@@ -79,4 +81,5 @@ public class ComputerService
 
         command.ExecuteNonQuery();
     }
+}
 }

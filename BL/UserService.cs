@@ -20,24 +20,42 @@ namespace BL
         }
 
         public ServiceResult<string> Login(string username, string password)
+{
+    try
+    {
+        // Validate input
+        if (string.IsNullOrWhiteSpace(username))
         {
-            try
-            {
-                var (isValid, role) = _repository.ValidateLogin(username, password);
-
-                if (isValid)
-                {
-                    return ServiceResult<string>.Ok(role);
-                }
-
-                return ServiceResult<string>.Fail("Invalid username or password.");
-            }
-            catch (Exception ex)
-            {
-                // Ghi log lỗi tại đây nếu cần
-                return ServiceResult<string>.Fail($"An error occurred: {ex.Message}");
-            }
+            return ServiceResult<string>.Fail("Username cannot be empty.");
         }
+
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            return ServiceResult<string>.Fail("Password cannot be empty.");
+        }
+
+        // Lấy thông tin người dùng từ database
+        var user = _repository.GetUserByUsername(username);
+        if (user == null)
+        {
+            return ServiceResult<string>.Fail("Invalid username or password.");
+        }
+
+        // So sánh mật khẩu đã mã hóa bằng BCrypt
+        bool isPasswordValid = BCrypt.Net.BCrypt.Verify(password, user.Password);
+        if (isPasswordValid)
+        {
+            return ServiceResult<string>.Ok(user.Role);
+        }
+
+        return ServiceResult<string>.Fail("Invalid username or password.");
+    }
+    catch (Exception ex)
+    {
+        // Ghi log lỗi tại đây nếu cần
+        return ServiceResult<string>.Fail($"An error occurred: {ex.Message}");
+    }
+}
 
         public void UpdateUserBalance(string username, decimal amount)
         {
@@ -91,10 +109,13 @@ namespace BL
             using var connection = _dbContext.GetConnection();
             connection.Open();
 
+            // Mã hóa mật khẩu bằng BCrypt
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(user.Password);
+
             const string query = "INSERT INTO users (username, password, role) VALUES (@username, @password, @role)";
             using var command = new MySqlCommand(query, connection);
             command.Parameters.AddWithValue("@username", user.Username);
-            command.Parameters.AddWithValue("@password", user.Password);
+            command.Parameters.AddWithValue("@password", hashedPassword);
             command.Parameters.AddWithValue("@role", user.Role);
 
             command.ExecuteNonQuery();
@@ -169,7 +190,7 @@ namespace BL
 
             const string query = "UPDATE users SET computer_id = @computer_id WHERE username = @username";
             using var command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@computer_id", computerId.HasValue ? (object)computerId.Value : DBNull.Value);
+            command.Parameters.AddWithValue("@computer_id", computerId ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@username", username);
 
             command.ExecuteNonQuery();
