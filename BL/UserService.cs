@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using DAL;
 using Persistence;
 using MySql.Data.MySqlClient;
-using BCrypt.Net;
+
 
 namespace BL
 {
