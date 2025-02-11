@@ -5,6 +5,7 @@ using BL;
 using System.Timers;
 using Persistence;
 using Games;
+using System.Threading.Tasks;
 
 
 namespace ConsolePL
@@ -183,7 +184,7 @@ namespace ConsolePL
         }
 
     static void ShowAdminMenu(AdminService adminService)
-   {
+    {
     var settingsService = new SettingsService();
     bool isRunning = true;
     while (isRunning)
@@ -197,12 +198,15 @@ namespace ConsolePL
         Console.WriteLine(" ***************************************");
         Console.ResetColor();
 
-        Console.WriteLine("1. Update Rate Per Hour");
-        Console.WriteLine("2. Search Computers");
-        Console.WriteLine("3. Display All Computers");
-        Console.WriteLine("4. Search User");
-        Console.WriteLine("5. Register User");
-        Console.WriteLine("6. Logout");
+        string[] menuItems = {
+            "1. Update Rate Per Hour",
+            "2. Search Computers",
+            "3. Display All Computers",
+            "4. Search User",
+            "5. Register User",
+            "6. Logout"
+        };
+        DisplayMenu("Select an option", menuItems);
         Console.Write("Enter your choice: ");
         string choice = Console.ReadLine();
         switch (choice)
@@ -262,7 +266,7 @@ namespace ConsolePL
    }
 
 
-    static void ShowUserMenu(string role, string username, UserService userService)
+    static async void ShowUserMenu(string role, string username, UserService userService)
     {
         var sessionService = new SessionService();
         var settingsService = new SettingsService();
@@ -283,6 +287,28 @@ namespace ConsolePL
             Console.WriteLine($"Session running time: {elapsedTime:hh\\:mm\\:ss}");
             Console.SetCursorPosition(cursorLeft, cursorTop); // Restore the cursor position
         }
+        }
+
+        async Task<bool> WaitForDeposit(string username, UserService userService)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\nYou must add money to continue. If you do not deposit within 1 minute, you will be logged out.");
+            Console.ResetColor();
+
+            var cts = new CancellationTokenSource();
+            var taskDelay = Task.Delay(60000, cts.Token); // Chờ 1 phút
+
+            while (!taskDelay.IsCompleted)
+            {
+                await Task.Delay(5000); // Kiểm tra sau mỗi 5 giây
+                decimal balance = userService.GetBalance(username);
+                if (balance >= ratePerHour)
+                {
+                    cts.Cancel(); // Hủy đếm ngược nếu user đã nạp tiền
+                    return true;
+                }
+            }
+            return false; // Nếu hết 1 phút mà chưa nạp tiền
         }
 
         while (true)
@@ -307,10 +333,8 @@ namespace ConsolePL
             Console.WriteLine("*            User Menu                 *");
             Console.WriteLine("****************************************");
             Console.ResetColor();
-
             // Hiển thị ratePerHour
             Console.WriteLine($"\nCurrent rate per hour: {ratePerHour} VND");
-
             // Kiểm tra số dư
             var balance = userService.GetBalance(username);
             Console.WriteLine($"\nYour current balance: {balance} VND");
@@ -322,7 +346,23 @@ namespace ConsolePL
                 Console.WriteLine("\nInsufficient balance. Please add more money to use other features.");
                 Console.ResetColor();
                 AddMoney(username, userService);
-                continue; // Quay lại kiểm tra số dư sau khi nạp tiền
+                // continue; // Quay lại kiểm tra số dư sau khi nạp tiền
+                balance = userService.GetBalance(username);
+                if (balance >= requiredBalance) break; // Nếu user nạp đủ tiền thì tiếp tục
+
+                // Nếu sau 1 phút không nạp tiền, tự động logout
+                if (!await WaitForDeposit(username, userService))
+                {
+                    // Stop the session thread
+                    sessionActive = false;
+                    sessionTimer?.Stop();
+                    sessionTimer?.Dispose();
+
+                   Console.WriteLine("\nTime expired! Logging out...");
+                   System.Threading.Thread.Sleep(2000);
+                   userService.Logout(username);
+                   return;
+                }
             }
 
             // Tự động bắt đầu phiên ngay sau khi kiểm tra số dư
@@ -351,11 +391,14 @@ namespace ConsolePL
                 return;
             }
             }
-    
-            Console.WriteLine("1. End Session");
-            Console.WriteLine("2. Add Money");
-            Console.WriteLine("3. Play Game");
-            Console.WriteLine("4. View Session History");
+
+            string[] menuItems = {
+            "1. End Session",
+            "2. Add Money",
+            "3. Play Game",
+            "4. View Session History"
+            };
+            DisplayMenu("Select an option", menuItems);
             Console.Write("Enter your choice: ");
             string choice = Console.ReadLine();
    
@@ -382,7 +425,7 @@ namespace ConsolePL
 
                 // Tự động đăng xuất ngay sau khi kết thúc phiên
                 Console.WriteLine("\nLogging out...");
-                System.Threading.Thread.Sleep(2000);
+                System.Threading.Thread.Sleep(1500);
                 userService.Logout(username);
                 return;
 
@@ -461,23 +504,26 @@ namespace ConsolePL
 
         static void DisplayNetcoLogo()
         {
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("******************************************************");
-            Console.WriteLine("*                                                    *");
-            Console.WriteLine("*    ███    ██ ███████ ████████  ██████   ██████     *");
-            Console.WriteLine("*    ████   ██ ██         ██    ██     █ ██    ██    *");
-            Console.WriteLine("*    ██ ██  ██ ███████    ██    ██       ██    ██    *");
-            Console.WriteLine("*    ██  ██ ██ ██         ██    ██     █ ██    ██    *");
-            Console.WriteLine("*    ██   ████ ███████    ██     ██████   ██████     *");
-            Console.WriteLine("*                                                    *");
-            Console.WriteLine("******************************************************");
-            Console.ResetColor();
+          Console.Clear();
+          Console.ForegroundColor = ConsoleColor.Cyan;
+          Console.WriteLine("******************************************************");
+          Console.WriteLine("*                                                    *");
+          Console.WriteLine("*    ███    ██ ███████ ████████  ██████   ██████     *");
+          Console.WriteLine("*    ████   ██ ██         ██    ██     █ ██    ██    *");
+          Console.WriteLine("*    ██ ██  ██ ███████    ██    ██       ██    ██    *");
+          Console.WriteLine("*    ██  ██ ██ ██         ██    ██     █ ██    ██    *");
+          Console.WriteLine("*    ██   ████ ███████    ██     ██████   ██████     *");
+          Console.WriteLine("*                                                    *");
+          Console.WriteLine("******************************************************");
+          Console.ResetColor();
         }
+
+ 
 
         static void ViewSessionHistory(string username, SessionService sessionService, decimal ratePerHour)
         {
            Console.Clear();
-           Console.ForegroundColor = ConsoleColor.Yellow;
+           Console.ForegroundColor = ConsoleColor.Cyan;
            Console.WriteLine("**********************************");
            Console.WriteLine("*        SESSION HISTORY         *");
            Console.WriteLine("**********************************");
@@ -523,6 +569,24 @@ namespace ConsolePL
            Console.WriteLine("\nPress any key to return...");
            Console.ReadKey();
         }
+        static void DisplayMenu(string title, string[] menuItems)
+        {
+          int menuWidth = 50; // Độ rộng cố định cho menu
 
+          Console.ForegroundColor = ConsoleColor.Cyan;
+          Console.WriteLine("╔" + new string('═', menuWidth) + "╗");
+          Console.WriteLine("║" + title.PadRight(menuWidth) + "║");
+          Console.WriteLine("╠" + new string('═', menuWidth) + "╣");
+
+          Console.ResetColor();
+          foreach (var item in menuItems)
+          {
+            Console.WriteLine("║ " + item.PadRight(menuWidth - 2) + " ║");
+          }
+
+           Console.ForegroundColor = ConsoleColor.Cyan;
+           Console.WriteLine("╚" + new string('═', menuWidth) + "╝");
+           Console.ResetColor();
+        }
     }
 }
