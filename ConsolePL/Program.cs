@@ -22,7 +22,7 @@ namespace ConsolePL
                     Console.Clear();
                     DisplayNetcoLogo();
                     Console.WriteLine("****************************************");
-                    Console.WriteLine("* Welcome to Internet CO v1.0          *");
+                    Console.WriteLine("* Welcome to Internet CO v1.0           *");
                     Console.WriteLine("*                                       *");
                     Console.WriteLine("* 1. Login                              *");
                     Console.WriteLine("* 2. Exit                               *");
@@ -96,7 +96,7 @@ namespace ConsolePL
                    Console.ForegroundColor = ConsoleColor.Red;
                    Console.WriteLine($"\nUnexpected error: {ex.Message}");
                    Console.ResetColor();
-                   System.Threading.Thread.Sleep(2000);
+                   System.Threading.Thread.Sleep(1500);
                    return;
                 }
 
@@ -191,10 +191,10 @@ namespace ConsolePL
         Console.Clear();
         DisplayNetcoLogo();
         Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine("****************************************");
+        Console.WriteLine(" ***************************************");
         Console.WriteLine("* Welcome to Internet Shop Manager v1.0 *");
         Console.WriteLine("*            Admin Menu                 *");
-        Console.WriteLine("****************************************");
+        Console.WriteLine(" ***************************************");
         Console.ResetColor();
 
         Console.WriteLine("1. Update Rate Per Hour");
@@ -267,25 +267,38 @@ namespace ConsolePL
         var sessionService = new SessionService();
         var settingsService = new SettingsService();
         decimal ratePerHour;
-        try
-        {
-           ratePerHour = settingsService.GetRatePerHour();
-        }
-        catch (Exception ex)
-        {
-           Console.ForegroundColor = ConsoleColor.Red;
-           Console.WriteLine($"\nUnexpected error: {ex.Message}");
-           Console.ResetColor();
-           System.Threading.Thread.Sleep(1500);
-           return;
-        }
     
         System.Timers.Timer sessionTimer= null;
         bool sessionActive = false;
         DateTime sessionStartTime = DateTime.MinValue;
 
+        void UpdateRunningSessionTime(object sender, System.Timers.ElapsedEventArgs e)
+        {
+        if (sessionActive)
+        {
+            var elapsedTime = DateTime.Now - sessionStartTime;
+            int cursorLeft = Console.CursorLeft;
+            int cursorTop = Console.CursorTop;
+            Console.SetCursorPosition(0, Console.WindowHeight - 2); // Adjust the cursor position to the bottom of the console
+            Console.WriteLine($"Session running time: {elapsedTime:hh\\:mm\\:ss}");
+            Console.SetCursorPosition(cursorLeft, cursorTop); // Restore the cursor position
+        }
+        }
+
         while (true)
         {
+            try
+            {
+               ratePerHour = settingsService.GetRatePerHour();
+            }
+            catch (Exception ex)
+            {
+               Console.ForegroundColor = ConsoleColor.Red;
+               Console.WriteLine($"\nUnexpected error: {ex.Message}");
+               Console.ResetColor();
+               System.Threading.Thread.Sleep(1500);
+               return;
+            }
             Console.Clear();
             DisplayNetcoLogo();
             Console.ForegroundColor = ConsoleColor.Cyan;
@@ -294,7 +307,10 @@ namespace ConsolePL
             Console.WriteLine("*            User Menu                 *");
             Console.WriteLine("****************************************");
             Console.ResetColor();
-    
+
+            // Hiển thị ratePerHour
+            Console.WriteLine($"\nCurrent rate per hour: {ratePerHour} VND");
+
             // Kiểm tra số dư
             var balance = userService.GetBalance(username);
             Console.WriteLine($"\nYour current balance: {balance} VND");
@@ -308,51 +324,42 @@ namespace ConsolePL
                 AddMoney(username, userService);
                 continue; // Quay lại kiểm tra số dư sau khi nạp tiền
             }
+
+            // Tự động bắt đầu phiên ngay sau khi kiểm tra số dư
+            if (!sessionActive)
+            {
+            try
+            {
+                sessionService.StartSession(username);
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("\nSession started successfully!");
+                Console.ResetColor();
+
+                sessionActive = true;
+                sessionStartTime = DateTime.Now;
+
+                sessionTimer = new System.Timers.Timer(1000);
+                sessionTimer.Elapsed += UpdateRunningSessionTime;
+                sessionTimer.Start();
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"\nError starting session: {ex.Message}");
+                Console.ResetColor();
+                System.Threading.Thread.Sleep(1500);
+                return;
+            }
+            }
     
-            Console.WriteLine("1. Start Session");
-            Console.WriteLine("2. End Session");
-            Console.WriteLine("3. Add Money");
-            Console.WriteLine("4. Play Game");
-            Console.WriteLine("5. Logout");
+            Console.WriteLine("1. End Session");
+            Console.WriteLine("2. Add Money");
+            Console.WriteLine("3. Play Game");
+            Console.WriteLine("4. View Session History");
             Console.Write("Enter your choice: ");
             string choice = Console.ReadLine();
-    
+   
             if (choice == "1")
-            {
-                if (balance < ratePerHour)
-                {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("\nInsufficient balance to start a session. Please add more money.");
-                Console.ResetColor();
-                AddMoney(username, userService);
-                continue;
-                }
-                try
-                {
-                    sessionService.StartSession(username);
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("\nSession started successfully!");
-                    Console.ResetColor();
-
-                    sessionActive = true;
-                    sessionStartTime = DateTime.Now;
-                    // Start a timer to display the running session time
-                    sessionTimer = new System.Timers.Timer(1000);
-                    sessionTimer.Elapsed += (sender, e) => DisplayRunningSessionTime(sessionStartTime);
-                    sessionTimer.Start();
-                }
-                catch (Exception ex)
-                {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"\nError starting session: {ex.Message}");
-                }
-                finally
-                {
-                    Console.ResetColor();
-                    System.Threading.Thread.Sleep(1500);
-                }
-            }
-            else if (choice == "2")
             {
                 try
                 {
@@ -373,6 +380,12 @@ namespace ConsolePL
                 sessionTimer?.Stop();
                 sessionTimer?.Dispose();
 
+                // Tự động đăng xuất ngay sau khi kết thúc phiên
+                Console.WriteLine("\nLogging out...");
+                System.Threading.Thread.Sleep(2000);
+                userService.Logout(username);
+                return;
+
                 }
                 catch (Exception ex)
                 {
@@ -385,46 +398,31 @@ namespace ConsolePL
                 System.Threading.Thread.Sleep(1500);
                 }
             }
-            else if (choice == "3")
+            else if (choice == "2")
             {
                 AddMoney(username, userService);
             }
-            else if (choice == "4")
+            else if (choice == "3")
             {
                 Console.Clear();
-                Console.WriteLine("Starting Snake Game...");
+                Console.WriteLine("Starting Guess Number Game...");
                 System.Threading.Thread.Sleep(1000);
 
                 try
                 {
-                    var snakeGame = new SnakeGame();
-                    snakeGame.StartGame();
+                    var game = new GuessNumberGame();
+                    game.StartGame();
                 }
                 catch (Exception ex)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"\nError running Snake Game: {ex.Message}");
+                    Console.WriteLine($"\nError running Guess Number Game: {ex.Message}");
                     Console.ResetColor();
                 }
-
-                Console.WriteLine("\nExiting Snake Game... Returning to User Menu...");
-                System.Threading.Thread.Sleep(2000);
             }
-            else if (choice == "5")
+            else if (choice == "4")
             {
-            if (sessionActive)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("\nYou must end your session before logging out.");
-                Console.ResetColor();
-                System.Threading.Thread.Sleep(1500);
-            }
-            else
-            {
-                userService.Logout(username);
-                Console.WriteLine("Logging out...");
-                break;
-            }
+                ViewSessionHistory(username, sessionService, ratePerHour);
             }
             else
             {
@@ -432,14 +430,6 @@ namespace ConsolePL
                 Console.WriteLine("Invalid option. Please try again.");
                 Console.ResetColor();
                 System.Threading.Thread.Sleep(1500);
-            }
-
-            // Display the running session time at the bottom of the console
-            if (sessionActive)
-            {
-              var elapsedTime = DateTime.Now - sessionStartTime;
-              Console.SetCursorPosition(0, Console.WindowHeight - 2); // Adjust the cursor position to the bottom of the console
-              Console.WriteLine($"\nSession running time: {elapsedTime:hh\\:mm\\:ss}");
             }
         }
     }
@@ -484,11 +474,55 @@ namespace ConsolePL
             Console.ResetColor();
         }
 
-        static void DisplayRunningSessionTime(DateTime sessionStartTime)
+        static void ViewSessionHistory(string username, SessionService sessionService, decimal ratePerHour)
         {
-          var elapsedTime = DateTime.Now - sessionStartTime;
-          Console.SetCursorPosition(0, 20); // Adjust the cursor position to where you want to display the running time
-          Console.WriteLine($"\nSession running time: {elapsedTime:hh\\:mm\\:ss}");
+           Console.Clear();
+           Console.ForegroundColor = ConsoleColor.Yellow;
+           Console.WriteLine("**********************************");
+           Console.WriteLine("*        SESSION HISTORY         *");
+           Console.WriteLine("**********************************");
+           Console.ResetColor();
+
+           var history = sessionService.GetSessionHistory(username, ratePerHour);
+    
+           if (history.Count == 0)
+           {
+              Console.WriteLine("\nNo previous sessions found.");
+           }
+           else
+           {
+              // Định nghĩa độ rộng cố định cho các cột
+              const int col1Width = 5;  // ID
+              const int col2Width = 22; // Start Time
+              const int col3Width = 22; // End Time
+              const int col4Width = 12; // Cost (VND)
+
+              // Hiển thị tiêu đề bảng
+              Console.WriteLine("\n" +
+              "ID".PadRight(col1Width) +
+              "Start Time".PadRight(col2Width) +
+              "End Time".PadRight(col3Width) +
+              "Cost (VND)".PadLeft(col4Width));
+              Console.WriteLine(new string('-', col1Width + col2Width + col3Width + col4Width));
+
+              // Hiển thị từng phiên trong lịch sử
+              foreach (var session in history)
+              {
+                string endTime = session.EndTime.HasValue ? session.EndTime.Value.ToString("g") : "In Progress";
+                string cost = session.Cost > 0 ? $"{session.Cost:N0} VND" : "0 VND";
+
+                Console.WriteLine(
+                  session.SessionId.ToString().PadRight(col1Width) +
+                  session.StartTime.ToString("g").PadRight(col2Width) +
+                  endTime.PadRight(col3Width) +
+                  cost.PadLeft(col4Width)
+                );
+              }
+           }
+
+           Console.WriteLine("\nPress any key to return...");
+           Console.ReadKey();
         }
+
     }
 }

@@ -1,7 +1,7 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Project1_VTC\\consolePL\\ConsolePL.csproj": {}
+    "D:\\Project1_VTC\\ConsolePL\\ConsolePL.csproj": {}
   },
   "projects": {
     "D:\\Project1_VTC\\BL\\BL.csproj": {
@@ -69,14 +69,14 @@
         }
       }
     },
-    "D:\\Project1_VTC\\consolePL\\ConsolePL.csproj": {
+    "D:\\Project1_VTC\\ConsolePL\\ConsolePL.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Project1_VTC\\consolePL\\ConsolePL.csproj",
+        "projectUniqueName": "D:\\Project1_VTC\\ConsolePL\\ConsolePL.csproj",
         "projectName": "ConsolePL",
-        "projectPath": "D:\\Project1_VTC\\consolePL\\ConsolePL.csproj",
+        "projectPath": "D:\\Project1_VTC\\ConsolePL\\ConsolePL.csproj",
         "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "D:\\Project1_VTC\\consolePL\\obj\\",
+        "outputPath": "D:\\Project1_VTC\\ConsolePL\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config"

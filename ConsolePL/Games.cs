@@ -3,164 +3,225 @@ using System.Collections.Generic;
 
 namespace Games
 {
-    public class SnakeGame
+    public class GuessNumberGame
     {
-        private Exception? exception = null;
-        private int speedInput;
-        private int[] velocities = { 100, 70, 50 };
-        private char[] DirectionChars = { '^', 'v', '<', '>' };
-        private TimeSpan sleep;
-        private int width;
-        private int height;
-        private Tile[,] map;
-        private Direction? direction = null;
-        private Queue<(int X, int Y)> snake = new();
-        private (int X, int Y) position;
-        private bool closeRequested = false;
+        private enum Difficulty { Easy = 1, Medium, Hard }
+        private const int EASY_ATTEMPTS = 15;
+        private const int MEDIUM_ATTEMPTS = 10;
+        private const int HARD_ATTEMPTS = 5;
+        
+        private int maxAttempts;
+        private int remainingAttempts;
+        private int secretNumber;
+        private int score;
+        private bool gameWon;
+        private List<int> guessHistory = new List<int>();
 
         public void StartGame()
         {
-            Console.CursorVisible = false;
-            string prompt = $"Select speed [1], [2] (default), or [3]: ";
-            string? input;
-            Console.Write(prompt);
-            while (!int.TryParse(input = Console.ReadLine(), out speedInput) || speedInput < 1 || 3 < speedInput)
-            {
-                if (string.IsNullOrWhiteSpace(input))
-                {
-                    speedInput = 2;
-                    break;
-                }
-                else
-                {
-                    Console.WriteLine("Invalid Input. Try Again...");
-                    Console.Write(prompt);
-                }
-            }
-            int velocity = velocities[speedInput - 1];
-            sleep = TimeSpan.FromMilliseconds(velocity);
-            width = Console.WindowWidth;
-            height = Console.WindowHeight;
-            map = new Tile[width, height];
-            position = (width / 2, height / 2);
-
             try
             {
                 Console.CursorVisible = false;
+                Console.Title = "Siêu Trò Chơi Đoán Số Pro";
+                ShowWelcomeScreen();
+                
+                // Cho phép thoát bằng phím ESC ngay từ đầu
+                if (!SelectDifficulty()) return;
+                GenerateSecretNumber();
+                
                 Console.Clear();
-                snake.Enqueue(position);
-                map[position.X, position.Y] = Tile.Snake;
-                PositionFood();
-                Console.SetCursorPosition(position.X, position.Y);
-                Console.Write('@');
-                while (!direction.HasValue && !closeRequested)
+                Console.WriteLine($"Bắt đầu game! Bạn có {maxAttempts} lượt đoán.");
+                
+                while (remainingAttempts > 0 && !gameWon)
                 {
-                    GetDirection();
-                }
-                while (!closeRequested)
-                {
-                    if (Console.WindowWidth != width || Console.WindowHeight != height)
+                    DisplayGameStatus();
+                    Console.WriteLine("Nhấn ESC để thoát, hoặc nhập số để đoán.");
+
+                    int guess = GetValidGuess();
+                    if (guess == -1) // Nếu người dùng nhấn ESC
                     {
-                        Console.Clear();
-                        Console.Write("Console was resized. Snake game has ended.");
+                        Console.WriteLine("\nBạn đã thoát khỏi trò chơi.");
                         return;
                     }
-                    switch (direction)
-                    {
-                        case Direction.Up: position.Y--; break;
-                        case Direction.Down: position.Y++; break;
-                        case Direction.Left: position.X--; break;
-                        case Direction.Right: position.X++; break;
-                    }
-                    if (position.X < 0 || position.X >= width ||
-                        position.Y < 0 || position.Y >= height ||
-                        map[position.X, position.Y] is Tile.Snake)
-                    {
-                        Console.Clear();
-                        Console.Write("Game Over. Score: " + (snake.Count - 1) + ".");
-                        return;
-                    }
-                    Console.SetCursorPosition(position.X, position.Y);
-                    Console.Write(DirectionChars[(int)direction!]);
-                    snake.Enqueue(position);
-                    if (map[position.X, position.Y] is Tile.Food)
-                    {
-                        PositionFood();
-                    }
-                    else
-                    {
-                        (int x, int y) = snake.Dequeue();
-                        map[x, y] = Tile.Open;
-                        Console.SetCursorPosition(x, y);
-                        Console.Write(' ');
-                    }
-                    map[position.X, position.Y] = Tile.Snake;
-                    if (Console.KeyAvailable)
-                    {
-                        GetDirection();
-                    }
-                    System.Threading.Thread.Sleep(sleep);
+
+                    ProcessGuess(guess);
                 }
+
+                ShowGameResult();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                exception = e;
-                throw;
+                Console.Clear();
+                Console.WriteLine($"Lỗi: {ex.Message}");
             }
             finally
             {
                 Console.CursorVisible = true;
-                Console.Clear();
-                Console.WriteLine(exception?.ToString() ?? "Snake was closed.");
+                Console.WriteLine("\nNhấn phím bất kỳ để thoát...");
+                Console.ReadKey();
             }
         }
 
-        private void GetDirection()
+        private void ShowWelcomeScreen()
         {
-            switch (Console.ReadKey(true).Key)
-            {
-                case ConsoleKey.UpArrow: direction = Direction.Up; break;
-                case ConsoleKey.DownArrow: direction = Direction.Down; break;
-                case ConsoleKey.LeftArrow: direction = Direction.Left; break;
-                case ConsoleKey.RightArrow: direction = Direction.Right; break;
-                case ConsoleKey.Escape: closeRequested = true; break;
-            }
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("====================================");
+            Console.WriteLine("   CHÀO MỪNG ĐẾN VỚI TRÒ ĐOÁN SỐ     ");
+            Console.WriteLine("====================================");
+            Console.ResetColor();
+            Console.WriteLine("\nLuật chơi:");
+            Console.WriteLine("- Tôi sẽ nghĩ một số từ 1 đến 100");
+            Console.WriteLine("- Bạn phải đoán số đó trong giới hạn lượt");
+            Console.WriteLine("- Sau mỗi lượt, tôi sẽ gợi ý số của bạn lớn/nhỏ hơn");
+            Console.WriteLine("\nNhấn phím bất kỳ để tiếp tục...");
+            Console.ReadKey();
         }
 
-        private void PositionFood()
+        private bool SelectDifficulty()
         {
-            List<(int X, int Y)> possibleCoordinates = new();
-            for (int i = 0; i < width; i++)
+            Console.Clear();
+            Console.WriteLine("Chọn độ khó:");
+            Console.WriteLine($"1. Dễ ({EASY_ATTEMPTS} lượt)");
+            Console.WriteLine($"2. Trung bình ({MEDIUM_ATTEMPTS} lượt)");
+            Console.WriteLine($"3. Khó ({HARD_ATTEMPTS} lượt)");
+            Console.WriteLine("Nhấn ESC để thoát.");
+
+            while (true)
             {
-                for (int j = 0; j < height; j++)
+                Console.Write("Lựa chọn của bạn (1-3): ");
+
+                // Đọc phím từ người dùng
+                var key = Console.ReadKey(true);
+
+                // Kiểm tra nếu người chơi nhấn ESC
+                if (key.Key == ConsoleKey.Escape)
                 {
-                    if (map[i, j] is Tile.Open)
+                    Console.WriteLine("\nBạn đã thoát khỏi trò chơi.");
+                    return false;
+                }
+
+                // Xử lý lựa chọn độ khó
+                if (char.IsDigit(key.KeyChar))
+                {
+                    if (int.TryParse(key.KeyChar.ToString(), out int choice) && Enum.IsDefined(typeof(Difficulty), choice))
                     {
-                        possibleCoordinates.Add((i, j));
+                        maxAttempts = choice switch
+                        {
+                            1 => EASY_ATTEMPTS,
+                            2 => MEDIUM_ATTEMPTS,
+                            3 => HARD_ATTEMPTS,
+                            _ => MEDIUM_ATTEMPTS
+                        };
+                        remainingAttempts = maxAttempts;
+                        return true;
                     }
                 }
+
+                Console.WriteLine("\nLựa chọn không hợp lệ, vui lòng nhập lại!");
             }
-            int index = Random.Shared.Next(possibleCoordinates.Count);
-            (int X, int Y) = possibleCoordinates[index];
-            map[X, Y] = Tile.Food;
-            Console.SetCursorPosition(X, Y);
-            Console.Write('+');
         }
 
-        private enum Direction
+        private void GenerateSecretNumber()
         {
-            Up = 0,
-            Down = 1,
-            Left = 2,
-            Right = 3,
+            Random random = new Random();
+            secretNumber = random.Next(1, 101);
+            score = 1000;
         }
 
-        private enum Tile
+        private void DisplayGameStatus()
         {
-            Open = 0,
-            Snake,
-            Food,
+            Console.WriteLine("\n------------------------------------");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine($"Lượt còn lại: {remainingAttempts} | Điểm hiện tại: {score}");
+            Console.ResetColor();
+            Console.WriteLine("Lịch sử đoán: " + string.Join(", ", guessHistory));
+        }
+
+        private int GetValidGuess()
+{
+    string input = "";
+    Console.Write("\nNhập số từ 1 đến 100: "); // In thông báo MỘT LẦN
+    while (true)
+    {
+        var key = Console.ReadKey(intercept: true); // Đọc phím không hiển thị
+
+        // Thoát nếu nhấn ESC
+        if (key.Key == ConsoleKey.Escape)
+        {
+            return -1;
+        }
+
+        // Xử lý Backspace
+        if (key.Key == ConsoleKey.Backspace)
+        {
+            if (input.Length > 0)
+            {
+                input = input[0..^1]; // Cắt bỏ ký tự cuối
+                Console.Write("\b \b"); // Xóa trên console
+            }
+        }
+        // Xử lý phím số
+        else if (char.IsDigit(key.KeyChar))
+        {
+            input += key.KeyChar;
+            Console.Write(key.KeyChar); // Hiển thị ký tự
+        }
+        // Xử lý Enter
+        else if (key.Key == ConsoleKey.Enter)
+        {
+            if (input.Length == 0) continue; // Bỏ qua nếu chưa nhập
+
+            if (int.TryParse(input, out int guess) && guess is >= 1 and <= 100)
+            {
+                return guess;
+            }
+            
+            // Xử lý lỗi
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write("\nSố không hợp lệ! Nhập lại: ");
+            Console.ResetColor();
+            input = "";
         }
     }
 }
 
+        private void ProcessGuess(int guess)
+        {
+            guessHistory.Add(guess);
+            remainingAttempts--;
+            score -= Math.Abs(secretNumber - guess);
+
+            if (guess == secretNumber)
+            {
+                gameWon = true;
+                return;
+            }
+            
+            Console.WriteLine();
+            Console.ForegroundColor = guess < secretNumber ? ConsoleColor.Blue : ConsoleColor.Magenta;
+            Console.WriteLine($"Số của bạn {(guess < secretNumber ? "NHỎ" : "LỚN")} hơn số bí mật!");
+            Console.ResetColor();
+        }
+
+        private void ShowGameResult()
+        {
+            Console.Clear();
+            if (gameWon)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("CHÍNH XÁC! BẠN ĐÃ CHIẾN THẮNG!");
+                Console.WriteLine($"Số lần đoán: {maxAttempts - remainingAttempts}");
+                Console.WriteLine($"Điểm số: {score}");
+                Console.WriteLine("════════════════════════════════");
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("GAME OVER! BẠN ĐÃ HẾT LƯỢT ĐOÁN");
+                Console.WriteLine($"Số bí mật là: {secretNumber}");
+                Console.WriteLine("════════════════════════════════");
+            }
+            Console.ResetColor();
+        }
+    }
+}

@@ -143,41 +143,70 @@ private string GetComputerName(int? computerId)
     return "None";
 }
 
-
-    public void RegisterUser()
+public void RegisterUser()
+{
+    Console.Write("Enter new username: ");
+    string username = Console.ReadLine();
+    if (userService.GetUserByUsername(username) != null)
     {
-        Console.Write("Enter new username: ");
-        string username = Console.ReadLine();
-        if (userService.GetUserByUsername(username) != null)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("\nUsername already exists.");
-            Console.ResetColor();
-            System.Threading.Thread.Sleep(1500);
-            return;
-        }
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine("\nUsername already exists. Please try again.");
+        Console.ResetColor();
+        System.Threading.Thread.Sleep(1500);
+        return;
+    }
 
-        Console.Write("Enter password: ");
-        string password = Console.ReadLine();
+    string password, confirmPassword = string.Empty;
+    do
+    {
+        Console.Write("Enter password (at least 8 characters): ");
+        password = Console.ReadLine();
         if (password.Length < 8)
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("\nPassword must be at least 8 characters long.");
             Console.ResetColor();
             System.Threading.Thread.Sleep(1500);
-            return;
+            continue;
         }
-        var user = new User
+
+        Console.Write("Confirm password: ");
+        confirmPassword = Console.ReadLine();
+
+        if (password != confirmPassword)
         {
-            Username = username,
-            Password = password,
-            Role = "user" // Đặt vai trò mặc định là "user"
-        };
-        userService.RegisterUser(user);
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine("\nUser registered successfully.");
-        
-        Console.WriteLine("\nPress any key to return to the menu...");
-        Console.ReadKey();
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\nPasswords do not match. Please try again.");
+            Console.ResetColor();
+            System.Threading.Thread.Sleep(1500);
+        }
+    } while (password.Length < 8 || password != confirmPassword);
+
+    Console.Write("\nAre you sure you want to register this user? (Y/N): ");
+    string confirmation = Console.ReadLine().Trim().ToLower();
+    if (confirmation != "y")
+    {
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine("\nRegistration cancelled. Returning to admin menu...");
+        Console.ResetColor();
+        System.Threading.Thread.Sleep(1500);
+        return;
     }
+
+    var user = new User
+    {
+        Username = username,
+        Password = password,
+        Role = "user"
+    };
+    
+    userService.RegisterUser(user);
+    Console.ForegroundColor = ConsoleColor.Green;
+    Console.WriteLine("\nUser registered successfully.");
+    Console.ResetColor();
+
+    Console.WriteLine("\nPress any key to return to the menu...");
+    Console.ReadKey();
+}
+
 }

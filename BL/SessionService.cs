@@ -88,5 +88,36 @@ namespace BL
 
             throw new Exception("No active session found.");
         }
+        public List<(int SessionId, DateTime StartTime, DateTime? EndTime, decimal Cost)> GetSessionHistory(string username, decimal ratePerHour)
+        {
+           var sessionHistory = new List<(int, DateTime, DateTime?, decimal)>();
+
+           using var connection = _dbContext.GetConnection();
+           connection.Open();
+
+           const string query = "SELECT id, start_time, end_time FROM sessions WHERE username = @username ORDER BY start_time DESC";
+           using var command = new MySqlCommand(query, connection);
+           command.Parameters.AddWithValue("@username", username);
+
+           using var reader = command.ExecuteReader();
+           while (reader.Read())
+           {
+              int sessionId = reader.GetInt32("id");
+              DateTime startTime = reader.GetDateTime("start_time");
+              DateTime? endTime = reader.IsDBNull(reader.GetOrdinal("end_time")) ? null : reader.GetDateTime("end_time");
+
+              decimal cost = 0;
+              if (endTime.HasValue)
+              {
+                var duration = endTime.Value - startTime;
+                cost = (decimal)duration.TotalHours * ratePerHour;
+              }
+
+              sessionHistory.Add((sessionId, startTime, endTime, cost));
+           }
+
+           return sessionHistory;
+        }
+
     }
 }

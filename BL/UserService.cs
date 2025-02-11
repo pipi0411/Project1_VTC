@@ -102,47 +102,82 @@ namespace BL
         }
 
         public void SelectComputer(string username)
+{
+    while (true)
+    {
+        Console.Clear(); // Xóa màn hình để làm mới danh sách
+
+        Console.WriteLine("🔹 Available Computers:");
+        var computers = computerService.GetAllComputers();
+        
+        Console.WriteLine("┌──────┬───────────────┬─────────┐");
+        Console.WriteLine("│  ID  │     Name      │ Status  │");
+        Console.WriteLine("├──────┼───────────────┼─────────┤");
+
+        foreach (var computer in computers)
         {
-            while (true)
-            {
-            Console.WriteLine("Available Computers:");
-            var computers = computerService.GetAllComputers();
-            foreach (var computer in computers)
-            {
-                if (!computer.IsOn)
-                {
-                    Console.WriteLine($"ID: {computer.Id}, Name: {computer.Name}, Status: Off");
-                }
-            }
+            Console.Write("│ ");
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write($"{computer.Id,-4}");
+            Console.ResetColor();
+            Console.Write(" │ ");
 
-            Console.Write("Enter Computer ID to select: ");
-            if (int.TryParse(Console.ReadLine(), out int id))
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write($"{computer.Name,-13}");
+            Console.ResetColor();
+            Console.Write(" │ ");
+
+            if (computer.IsOn)
             {
-                var computer = computerService.GetComputerById(id);
-                if (computer != null && !computer.IsOn)
-                {
-                    computer.IsOn = true;
-                    computer.CurrentUser = username;
-                    computer.OnTime = DateTime.Now;
-                    computerService.UpdateComputer(computer);
-
-                    // Cập nhật ComputerId cho người dùng
-                    UpdateUserComputerId(username, id);
-
-                    Console.WriteLine($"Computer {computer.Name} selected successfully.");
-                    break;
-                }
-                else
-                {
-                    Console.WriteLine("Invalid selection. Please select an off computer.");
-                }
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Write($" {"On",-5} ");
             }
             else
             {
-                Console.WriteLine("Invalid ID.");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write($" {"Off",-5} ");
             }
+            Console.ResetColor();
+            Console.WriteLine(" │");
+        }
+
+        Console.WriteLine("└──────┴───────────────┴─────────┘");
+
+        Console.Write("💻 Enter Computer ID to select: ");
+        if (int.TryParse(Console.ReadLine(), out int id))
+        {
+            var computer = computerService.GetComputerById(id);
+            if (computer != null && !computer.IsOn)
+            {
+                computer.IsOn = true;
+                computer.CurrentUser = username;
+                computer.OnTime = DateTime.Now;
+                computerService.UpdateComputer(computer);
+
+                // Cập nhật ComputerId cho người dùng
+                UpdateUserComputerId(username, id);
+
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"✅ Computer {computer.Name} selected successfully.");
+                Console.ResetColor();
+                break;
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("❌ Invalid selection. Please select an off computer.");
+                Console.ResetColor();
             }
         }
+        else
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("❌ Invalid ID.");
+            Console.ResetColor();
+        }
+    }
+}
+
 
         public void Logout(string username)
         {
