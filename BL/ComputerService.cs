@@ -12,7 +12,7 @@ public class ComputerService
     public ComputerService()
     {
         // Initialize the connection string (replace with your actual connection string)
-        connectionString = "server=127.0.0.1;user=root;password=Duyanh0612;database=InternetCo";
+        connectionString = "server=127.0.0.1;user=root;database=InternetCo";
     }
 
     public Computer GetComputerById(int id)
