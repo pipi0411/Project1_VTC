@@ -182,6 +182,19 @@ public void RegisterUser()
         }
     } while (password.Length < 8 || password != confirmPassword);
 
+    decimal balance = 0;
+    do 
+    {
+        Console.Write("Enter initial balance (VND): ");
+        if (!decimal.TryParse(Console.ReadLine(), out balance) || balance < 0)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\nInvalid balance. Please enter a non-negative number.");
+            Console.ResetColor();
+            System.Threading.Thread.Sleep(1500);
+        }
+    } while (balance < 0);
+
     Console.Write("\nAre you sure you want to register this user? (Y/N): ");
     string confirmation = Console.ReadLine().Trim().ToLower();
     if (confirmation != "y")
@@ -197,6 +210,7 @@ public void RegisterUser()
     {
         Username = username,
         Password = password,
+        Balance = balance,
         Role = "user"
     };
     
@@ -207,6 +221,56 @@ public void RegisterUser()
 
     Console.WriteLine("\nPress any key to return to the menu...");
     Console.ReadKey();
+}
+
+public void PaymentUser()
+{
+    Console.Write("Enter User ID to add money: ");
+    if (int.TryParse(Console.ReadLine(), out int userId))
+    {
+        var user = userService.GetUserById(userId);
+        if (user != null)
+        {
+            Console.Write($"Enter amount to add to {user.Username}'s account: ");
+            if (decimal.TryParse(Console.ReadLine(), out decimal amount) && amount > 0)
+            {
+                try
+                {
+                    userService.UpdateUserBalance(user.Username, amount);
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine($"\nSuccessfully added {amount} VND to {user.Username}'s account.");
+                }
+                catch (Exception ex)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"\nError adding money: {ex.Message}");
+                }
+                finally
+                {
+                    Console.ResetColor();
+                }
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("\nInvalid amount. Please enter a positive amount.");
+                Console.ResetColor();
+            }
+        }
+        else
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\nUser not found.");
+            Console.ResetColor();
+        }
+    }
+    else
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine("\nInvalid User ID.");
+        Console.ResetColor();
+    }
+    System.Threading.Thread.Sleep(1500);
 }
 
 }

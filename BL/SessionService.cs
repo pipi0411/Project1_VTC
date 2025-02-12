@@ -7,10 +7,12 @@ namespace BL
     public class SessionService
     {
         private readonly UserDbContext _dbContext;
+        private readonly UserService _userService;
 
         public SessionService()
         {
             _dbContext = new UserDbContext();
+            _userService = new UserService();
         }
 
         public void StartSession(string username)
@@ -57,6 +59,17 @@ namespace BL
             updateCommand.ExecuteNonQuery();
 
             return hours * ratePerHour;
+        }
+
+        public TimeSpan GetRemainingTime(string username, decimal ratePerHour)
+        {
+           var balance = _userService.GetBalance(username);
+            if (balance <= 0)
+            {
+                return TimeSpan.Zero;
+            }
+            var remainingHousrs = balance / ratePerHour;
+            return TimeSpan.FromHours((double)remainingHousrs);
         }
 
         public bool IsSessionActive(string username)

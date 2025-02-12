@@ -92,10 +92,11 @@ namespace BL
             using var connection = _dbContext.GetConnection();
             connection.Open();
 
-            const string query = "INSERT INTO users (username, password, role) VALUES (@username, @password, @role)";
+            const string query = "INSERT INTO users (username, password, balance, role) VALUES (@username, @password, @balance, @role)";
             using var command = new MySqlCommand(query, connection);
             command.Parameters.AddWithValue("@username", user.Username);
             command.Parameters.AddWithValue("@password", user.Password);
+            command.Parameters.AddWithValue("@balance", user.Balance);
             command.Parameters.AddWithValue("@role", user.Role);
 
             command.ExecuteNonQuery();
@@ -152,6 +153,7 @@ namespace BL
                 var balance = GetBalance(username);
                 if (balance >= ratePerHour)
                 {
+              
                 computer.IsOn = true;
                 computer.CurrentUser = username;
                 computer.OnTime = DateTime.Now;
@@ -159,9 +161,6 @@ namespace BL
 
                 // Cập nhật ComputerId cho người dùng
                 UpdateUserComputerId(username, id);
-
-                // Trừ tiền ngay lập tức
-                UpdateUserBalance(username, -ratePerHour);
 
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"✅ Computer {computer.Name} selected successfully.");
@@ -223,6 +222,29 @@ namespace BL
             command.Parameters.AddWithValue("@username", username);
 
             command.ExecuteNonQuery();
+        }
+
+        public User GetUserById(int userId)
+        {
+            using var connection = _dbContext.GetConnection();
+            connection.Open();
+
+            const string query = "SELECT * FROM users WHERE id = @id";
+            using var command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@id", userId);
+
+            using var reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+                return new User
+                {
+                    Id = reader.GetInt32("id"),
+                    Username = reader.GetString("username"),
+                    Balance = reader.GetDecimal("balance"),
+                };
+            }
+
+            return null;
         }
 
     }

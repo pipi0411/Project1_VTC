@@ -5,7 +5,6 @@ using BL;
 using System.Timers;
 using Persistence;
 using Games;
-using System.Threading.Tasks;
 
 
 namespace ConsolePL
@@ -110,9 +109,9 @@ namespace ConsolePL
                 if (balance < requiredBalance)
                 {
                    Console.ForegroundColor = ConsoleColor.Red;
-                   Console.WriteLine("\nInsufficient balance. Please add more money to your account.");
+                   Console.WriteLine("\nInsufficient balance. Please contact the NetCo manager.");
                    Console.ResetColor();
-                   AddMoney(username, userService);
+                   System.Threading.Thread.Sleep(2000);
                 }
                 ShowMenu(result.Data, username, userService, adminService);
             }
@@ -124,37 +123,6 @@ namespace ConsolePL
                 System.Threading.Thread.Sleep(1500);
             }
         }
-
-    static void AddMoney(string username, UserService userService)
-    {
-    Console.Write("Enter amount to add (<= 100,000 VND transaction): ");
-    if (decimal.TryParse(Console.ReadLine(), out decimal amount) && amount <= 100000)
-    {
-        try
-        {
-            userService.UpdateUserBalance(username, amount);
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"\nSuccessfully added {amount} VND to your account.");
-        }
-        catch (Exception ex)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"\nError adding money: {ex.Message}");
-        }
-        finally
-        {
-            Console.ResetColor();
-        }
-    }
-    else
-    {
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine("\nInvalid amount. Please enter exactly 100,000 VND.");
-        Console.ResetColor();
-    }
-    System.Threading.Thread.Sleep(1500);
-    }
-
 
         static void ShowMenu(string role, string username, UserService userService, AdminService adminService )
         {
@@ -218,7 +186,8 @@ namespace ConsolePL
             "3. Display All Computers",
             "4. Search User",
             "5. Register User",
-            "6. Logout"
+            "6. Payment User",
+            "7. Logout"
         };
         DisplayMenu("Select an option", menuItems);
         Console.Write("Enter your choice: ");
@@ -266,6 +235,9 @@ namespace ConsolePL
                 adminService.RegisterUser();
                 break;
             case "6":
+                adminService.PaymentUser();
+                break;
+            case "7":
                 Console.WriteLine("Logging out...");
                 isRunning = false;
                 break;
@@ -280,7 +252,7 @@ namespace ConsolePL
    }
 
 
-    static async void ShowUserMenu(string role, string username, UserService userService, decimal ratePerHour)
+    static void ShowUserMenu(string role, string username, UserService userService, decimal ratePerHour)
     {
         var sessionService = new SessionService();
         var settingsService = new SettingsService();
@@ -294,10 +266,15 @@ namespace ConsolePL
         if (sessionActive)
         {
             var elapsedTime = DateTime.Now - sessionStartTime;
+            var remainingTime = sessionService.GetRemainingTime(username, ratePerHour) - elapsedTime;
+            if (remainingTime < TimeSpan.Zero)
+            {
+               remainingTime = TimeSpan.Zero;
+            }
             int cursorLeft = Console.CursorLeft;
             int cursorTop = Console.CursorTop;
             Console.SetCursorPosition(0, Console.WindowHeight - 2); // Adjust the cursor position to the bottom of the console
-            Console.WriteLine($"Session running time: {elapsedTime:hh\\:mm\\:ss}");
+            Console.WriteLine($"Remaining time: {remainingTime:hh\\:mm\\:ss}");
             Console.SetCursorPosition(cursorLeft, cursorTop); // Restore the cursor position
         }
         }
@@ -341,28 +318,37 @@ namespace ConsolePL
             Console.WriteLine($"\nYour current balance: {balance} VND");
             decimal requiredBalance = ratePerHour;
     
-            if (balance < requiredBalance)
+            if (balance <= 0 )
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("\nInsufficient balance. Please add more money to use other features.");
-                Console.ResetColor();
-                AddMoney(username, userService);
-                // continue; // Quay lại kiểm tra số dư sau khi nạp tiền
-                balance = userService.GetBalance(username);
-                if (balance > requiredBalance) break; // Nếu user nạp đủ tiền thì tiếp tục
-
-                // Nếu sau 1 phút không nạp tiền, tự động logout
-                if (!await WaitForDeposit(username, userService))
+                var remainingTime = sessionService.GetRemainingTime(username, ratePerHour);
+                if (remainingTime <= TimeSpan.Zero)
                 {
-                    // Stop the session thread
-                    sessionActive = false;
-                    sessionTimer?.Stop();
-                    sessionTimer?.Dispose();
-
-                   Console.WriteLine("\nTime expired! Logging out...");
+                   Console.ForegroundColor = ConsoleColor.Red;
+                   Console.WriteLine("\n.Insufficient balance and time has expired.Please contact the NetCo manager");
+                   Console.ResetColor();
                    System.Threading.Thread.Sleep(2000);
-                   userService.Logout(username);
-                   return;
+
+                   // Kiểm tra lại số dư sau khi nạp tiền
+                   balance = userService.GetBalance(username);
+                   if(balance <= 0)
+                   {
+                      // Nếu vẫn không có tiền, đăng xuất
+                      sessionActive = false;
+                      sessionTimer?.Stop();
+                      sessionTimer?.Dispose();
+
+                      Console.WriteLine("\nTime expired! Logging out...");
+                      System.Threading.Thread.Sleep(2000);
+                      userService.Logout(username);
+                      return;
+                   }
+                }
+                else
+                {
+                    // Nếu còn thời gian đếm ngược, tiếp tục chạy
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine($"\nWarning: Your balance is low. Remaining time: {remainingTime:hh\\:mm\\:ss}");
+                    Console.ResetColor();
                 }
             }
 
@@ -395,9 +381,8 @@ namespace ConsolePL
 
             string[] menuItems = {
             "1. End Session",
-            "2. Add Money",
-            "3. Play Game",
-            "4. View Session History"
+            "2. Play Game",
+            "3. View Session History"
             };
             DisplayMenu("Select an option", menuItems);
             Console.Write("Enter your choice: ");
@@ -408,14 +393,6 @@ namespace ConsolePL
                 try
                 {
                 var cost = sessionService.EndSession(username, ratePerHour);
-                if (balance - cost < requiredBalance)
-                {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"\nInsufficient balance to cover the session cost. Please add more money.");
-                    Console.ResetColor();
-                    AddMoney(username, userService);
-                    continue;
-                }
                 userService.UpdateUserBalance(username, -cost);
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"\nSession ended successfully! Cost: {cost} VND");
@@ -444,10 +421,6 @@ namespace ConsolePL
             }
             else if (choice == "2")
             {
-                AddMoney(username, userService);
-            }
-            else if (choice == "3")
-            {
                 Console.Clear();
                 Console.WriteLine("Starting Guess Number Game...");
                 System.Threading.Thread.Sleep(1000);
@@ -464,7 +437,7 @@ namespace ConsolePL
                     Console.ResetColor();
                 }
             }
-            else if (choice == "4")
+            else if (choice == "3")
             {
                 ViewSessionHistory(username, sessionService, ratePerHour);
             }
