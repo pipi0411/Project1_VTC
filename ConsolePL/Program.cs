@@ -111,7 +111,7 @@ namespace ConsolePL
                    Console.ForegroundColor = ConsoleColor.Red;
                    Console.WriteLine("\nInsufficient balance. Please contact the NetCo manager.");
                    Console.ResetColor();
-                   System.Threading.Thread.Sleep(2000);
+                   System.Threading.Thread.Sleep(3000);
                 }
                 ShowMenu(result.Data, username, userService, adminService);
             }
@@ -259,6 +259,7 @@ namespace ConsolePL
     
         System.Timers.Timer sessionTimer= null;
         bool sessionActive = false;
+        bool sessionEnded = false;
         DateTime sessionStartTime = DateTime.MinValue;
 
         void UpdateRunningSessionTime(object sender, System.Timers.ElapsedEventArgs e)
@@ -276,32 +277,35 @@ namespace ConsolePL
             Console.SetCursorPosition(0, Console.WindowHeight - 2); // Adjust the cursor position to the bottom of the console
             Console.WriteLine($"Remaining time: {remainingTime:hh\\:mm\\:ss}");
             Console.SetCursorPosition(cursorLeft, cursorTop); // Restore the cursor position
-        }
-        }
-
-        async Task<bool> WaitForDeposit(string username, UserService userService)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("\nYou must add money to continue. If you do not deposit within 1 minute, you will be logged out.");
-            Console.ResetColor();
-
-            var cts = new CancellationTokenSource();
-            var taskDelay = Task.Delay(60000, cts.Token); // Chờ 1 phút
-
-            while (!taskDelay.IsCompleted)
+            if (remainingTime == TimeSpan.Zero)
             {
-                await Task.Delay(5000); // Kiểm tra sau mỗi 5 giây
-                decimal balance = userService.GetBalance(username);
-                if (balance >= ratePerHour)
+               sessionActive = false;
+               sessionTimer.Stop();
+               sessionTimer.Dispose();
+               try
                 {
-                    cts.Cancel(); // Hủy đếm ngược nếu user đã nạp tiền
-                    return true;
+                    var cost = sessionService.EndSession(username, ratePerHour);
+                    userService.UpdateUserBalance(username, -cost);
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine($"\nTime expired! Session ended successfully! Cost: {cost} VND");
+                    Console.ResetColor();
+                    System.Threading.Thread.Sleep(1500);
+                    Console.WriteLine("\nLogging out...");
+                    userService.Logout(username);
+                    sessionEnded = true; // Đặt biến cờ để thoát khỏi vòng lặp
+                }
+                catch (Exception ex)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"\nError ending session: {ex.Message}");
+                    Console.ResetColor();
+                    System.Threading.Thread.Sleep(1500);
                 }
             }
-            return false; // Nếu hết 1 phút mà chưa nạp tiền
+        }
         }
 
-        while (true)
+        while (!sessionEnded)
         {
             Console.Clear();
             DisplayNetcoLogo();
@@ -340,6 +344,7 @@ namespace ConsolePL
                       Console.WriteLine("\nTime expired! Logging out...");
                       System.Threading.Thread.Sleep(2000);
                       userService.Logout(username);
+                      sessionEnded = true;
                       return;
                    }
                 }
@@ -403,8 +408,8 @@ namespace ConsolePL
 
                 // Tự động đăng xuất ngay sau khi kết thúc phiên
                 Console.WriteLine("\nLogging out...");
-                System.Threading.Thread.Sleep(1500);
                 userService.Logout(username);
+                sessionEnded = true;
                 return;
 
                 }
