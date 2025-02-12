@@ -1667,19 +1667,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Admin\\.nuget\\packages\\": {}
+    "C:\\Users\\Anh DU\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Project1_VTC\\consolePL\\ConsolePL.csproj",
+      "projectUniqueName": "D:\\Project_VTC\\ConsolePL\\ConsolePL.csproj",
       "projectName": "ConsolePL",
-      "projectPath": "D:\\Project1_VTC\\consolePL\\ConsolePL.csproj",
-      "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-      "outputPath": "D:\\Project1_VTC\\consolePL\\obj\\",
+      "projectPath": "D:\\Project_VTC\\ConsolePL\\ConsolePL.csproj",
+      "packagesPath": "C:\\Users\\Anh DU\\.nuget\\packages\\",
+      "outputPath": "D:\\Project_VTC\\ConsolePL\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\Anh DU\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -1691,14 +1691,14 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "D:\\Project1_VTC\\BL\\BL.csproj": {
-              "projectPath": "D:\\Project1_VTC\\BL\\BL.csproj"
+            "D:\\Project_VTC\\BL\\BL.csproj": {
+              "projectPath": "D:\\Project_VTC\\BL\\BL.csproj"
             },
-            "D:\\Project1_VTC\\DAL\\DAL.csproj": {
-              "projectPath": "D:\\Project1_VTC\\DAL\\DAL.csproj"
+            "D:\\Project_VTC\\DAL\\DAL.csproj": {
+              "projectPath": "D:\\Project_VTC\\DAL\\DAL.csproj"
             },
-            "D:\\Project1_VTC\\Persistence\\Persistence.csproj": {
-              "projectPath": "D:\\Project1_VTC\\Persistence\\Persistence.csproj"
+            "D:\\Project_VTC\\Persistence\\Persistence.csproj": {
+              "projectPath": "D:\\Project_VTC\\Persistence\\Persistence.csproj"
             }
           }
         }
@@ -1733,7 +1733,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.402/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.404/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

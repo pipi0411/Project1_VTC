@@ -158,6 +158,20 @@ namespace ConsolePL
 
         static void ShowMenu(string role, string username, UserService userService, AdminService adminService )
         {
+            var settingsService = new SettingsService();
+            decimal ratePerHour;
+            try
+            {
+                ratePerHour = settingsService.GetRatePerHour();
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"\nUnexpected error: {ex.Message}");
+                Console.ResetColor();
+                System.Threading.Thread.Sleep(1500);
+                return;
+            }
             while (true)
             {
                 if (role == "admin")
@@ -166,8 +180,8 @@ namespace ConsolePL
                 }
                 else if (role == "user")
                 {
-                    userService.SelectComputer(username);
-                    ShowUserMenu(role,username, userService);
+                    userService.SelectComputer(username, ratePerHour);
+                    ShowUserMenu(role ,username, userService, ratePerHour);
                 }
                 else
                 {
@@ -266,11 +280,10 @@ namespace ConsolePL
    }
 
 
-    static async void ShowUserMenu(string role, string username, UserService userService)
+    static async void ShowUserMenu(string role, string username, UserService userService, decimal ratePerHour)
     {
         var sessionService = new SessionService();
         var settingsService = new SettingsService();
-        decimal ratePerHour;
     
         System.Timers.Timer sessionTimer= null;
         bool sessionActive = false;
@@ -313,18 +326,6 @@ namespace ConsolePL
 
         while (true)
         {
-            try
-            {
-               ratePerHour = settingsService.GetRatePerHour();
-            }
-            catch (Exception ex)
-            {
-               Console.ForegroundColor = ConsoleColor.Red;
-               Console.WriteLine($"\nUnexpected error: {ex.Message}");
-               Console.ResetColor();
-               System.Threading.Thread.Sleep(1500);
-               return;
-            }
             Console.Clear();
             DisplayNetcoLogo();
             Console.ForegroundColor = ConsoleColor.Cyan;
@@ -348,7 +349,7 @@ namespace ConsolePL
                 AddMoney(username, userService);
                 // continue; // Quay lại kiểm tra số dư sau khi nạp tiền
                 balance = userService.GetBalance(username);
-                if (balance >= requiredBalance) break; // Nếu user nạp đủ tiền thì tiếp tục
+                if (balance > requiredBalance) break; // Nếu user nạp đủ tiền thì tiếp tục
 
                 // Nếu sau 1 phút không nạp tiền, tự động logout
                 if (!await WaitForDeposit(username, userService))

@@ -101,7 +101,7 @@ namespace BL
             command.ExecuteNonQuery();
         }
 
-        public void SelectComputer(string username)
+        public Computer SelectComputer(string username , decimal ratePerHour)
 {
     while (true)
     {
@@ -149,6 +149,9 @@ namespace BL
             var computer = computerService.GetComputerById(id);
             if (computer != null && !computer.IsOn)
             {
+                var balance = GetBalance(username);
+                if (balance >= ratePerHour)
+                {
                 computer.IsOn = true;
                 computer.CurrentUser = username;
                 computer.OnTime = DateTime.Now;
@@ -157,10 +160,21 @@ namespace BL
                 // Cập nhật ComputerId cho người dùng
                 UpdateUserComputerId(username, id);
 
+                // Trừ tiền ngay lập tức
+                UpdateUserBalance(username, -ratePerHour);
+
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"✅ Computer {computer.Name} selected successfully.");
                 Console.ResetColor();
-                break;
+                return computer;
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("❌ Insufficient balance to start a session.");
+                    Console.ResetColor();
+                    return null;
+                }
             }
             else
             {
