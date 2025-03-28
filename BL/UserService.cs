@@ -28,10 +28,17 @@ namespace BL
 
                 if (isValid)
                 {
-                    return ServiceResult<string>.Ok(role);
+                    var user = _repository.GetUserByUsername(username);
+                    if (user.Online)
+                   {
+                      return ServiceResult<string>.Fail("User is already logged in.");
+                   }
+
+                   _repository.UpdateOnlineStatus(username, true);
+                   return ServiceResult<string>.Ok(role);
                 }
 
-                return ServiceResult<string>.Fail("Invalid username or password.");
+                return ServiceResult<string>.Fail(role ??"Invalid username or password.");
             }
             catch (Exception ex)
             {
@@ -209,6 +216,9 @@ namespace BL
             }
             // Đặt lại ComputerId của người dùng thành null hoặc giá trị mặc định
             UpdateUserComputerId(username, null);
+
+            // Cập nhật trạng thái online
+            _repository.UpdateOnlineStatus(username, false);
         }
 
         private void UpdateUserComputerId(string username, int? computerId)

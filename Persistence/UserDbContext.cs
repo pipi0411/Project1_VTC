@@ -8,7 +8,7 @@ namespace Persistence
 
         public UserDbContext()
         {
-            _connectionString = "server=127.0.0.1;user=root;database=InternetCo"; // Replace with your actual connection string
+            _connectionString = "server=sql12.freesqldatabase.com;Database=sql12770067;User Id=sql12770067;Password=4j8VladhPb;Port=3306"; // Replace with your actual connection string
         }
 
         public MySqlConnection GetConnection()

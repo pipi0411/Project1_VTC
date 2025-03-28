@@ -8,5 +8,6 @@ namespace Persistence
         public decimal Balance { get; set; }
         public int ComputerId { get; set; }
         public string Role { get; set; }
+        public bool Online { get; set; }
     }
 }
