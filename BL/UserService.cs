@@ -28,17 +28,11 @@ namespace BL
 
                 if (isValid)
                 {
-                    var user = _repository.GetUserByUsername(username);
-                    if (user.Online)
-                   {
-                      return ServiceResult<string>.Fail("User is already logged in.");
-                   }
-
                    _repository.UpdateOnlineStatus(username, true);
                    return ServiceResult<string>.Ok(role);
                 }
 
-                return ServiceResult<string>.Fail(role ??"Invalid username or password.");
+                return ServiceResult<string>.Fail(role ?? "Invalid username or password.");
             }
             catch (Exception ex)
             {
@@ -86,7 +80,10 @@ namespace BL
             {
               Id = reader.GetInt32("id"),
               Username = reader.GetString("username"),
+              Password = reader.GetString("password"),
               Balance = reader.GetDecimal("balance"),
+              Role = reader.GetString("role"),
+              Online = reader.GetBoolean("online"),
               ComputerId = reader.IsDBNull(reader.GetOrdinal("computer_id")) ? 0 : reader.GetInt32("computer_id")
             };
             }
@@ -99,12 +96,13 @@ namespace BL
             using var connection = _dbContext.GetConnection();
             connection.Open();
 
-            const string query = "INSERT INTO users (username, password, balance, role) VALUES (@username, @password, @balance, @role)";
+            const string query = "INSERT INTO users (username, password, balance, role, online) VALUES (@username, @password, @balance, @role, @online)";
             using var command = new MySqlCommand(query, connection);
             command.Parameters.AddWithValue("@username", user.Username);
             command.Parameters.AddWithValue("@password", user.Password);
             command.Parameters.AddWithValue("@balance", user.Balance);
             command.Parameters.AddWithValue("@role", user.Role);
+            command.Parameters.AddWithValue("@online", user.Online);
 
             command.ExecuteNonQuery();
         }
@@ -201,23 +199,30 @@ namespace BL
 
         public void Logout(string username)
         {
-            var computers = computerService.GetAllComputers();
-            foreach (var computer in computers)
+            // Lấy thông tin user để kiểm tra role
+            var user = _repository.GetUserByUsername(username);
+            
+            if (user != null && user.Role == "user")
             {
-                if (computer.CurrentUser == username)
+                // Chỉ xử lý computer nếu là user thường
+                var computers = computerService.GetAllComputers();
+                foreach (var computer in computers)
                 {
-                    computer.IsOn = false;
-                    computer.CurrentUser = null;
-                    computer.OnTime = null;
-                    computerService.UpdateComputer(computer);
-                    Console.WriteLine($"User {username} logged out. Computer {computer.Name} is now off.");
-                    break;
+                    if (computer.CurrentUser == username)
+                    {
+                        computer.IsOn = false;
+                        computer.CurrentUser = null;
+                        computer.OnTime = null;
+                        computerService.UpdateComputer(computer);
+                        Console.WriteLine($"User {username} logged out. Computer {computer.Name} is now off.");
+                        break;
+                    }
                 }
+                // Đặt lại ComputerId của người dùng thành null
+                UpdateUserComputerId(username, null);
             }
-            // Đặt lại ComputerId của người dùng thành null hoặc giá trị mặc định
-            UpdateUserComputerId(username, null);
 
-            // Cập nhật trạng thái online
+            // Cập nhật trạng thái online cho tất cả user (cả admin và user)
             _repository.UpdateOnlineStatus(username, false);
         }
 
@@ -256,6 +261,5 @@ namespace BL
 
             return null;
         }
-
     }
 }

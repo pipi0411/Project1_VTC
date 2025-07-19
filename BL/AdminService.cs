@@ -118,18 +118,23 @@ private void DisplayUserDetails(User user)
     Console.ForegroundColor = ConsoleColor.Cyan;
 
     // In tiêu đề bảng
-    Console.WriteLine("═══════════════════════════════════════════════════════");
-    Console.WriteLine("║   ID   ║     Name      ║   Balance   ║   Computer   ║");
-    Console.WriteLine("═══════════════════════════════════════════════════════");
+    Console.WriteLine("═══════════════════════════════════════════════════════════════════");
+    Console.WriteLine("║   ID   ║     Name      ║   Balance   ║   Computer   ║   Status  ║");
+    Console.WriteLine("═══════════════════════════════════════════════════════════════════");
     Console.ResetColor();
 
-    // In thông tin người dùng
-    Console.ForegroundColor = ConsoleColor.Green;
-    Console.WriteLine($"║ {user.Id,-6} ║ {user.Username,-13} ║ {user.Balance,-11} ║ {GetComputerName(user.ComputerId),-12} ║");
+    // In thông tin người dùng với màu sắc cho trạng thái online
+    string onlineStatus = user.Online ? "Online" : "Offline";
+    ConsoleColor statusColor = user.Online ? ConsoleColor.Green : ConsoleColor.Red;
+    
+    Console.Write($"║ {user.Id,-6} ║ {user.Username,-13} ║ {user.Balance,-11} ║ {GetComputerName(user.ComputerId),-12} ║ ");
+    Console.ForegroundColor = statusColor;
+    Console.Write($"{onlineStatus,-9}");
     Console.ResetColor();
+    Console.WriteLine(" ║");
 
     Console.ForegroundColor = ConsoleColor.Cyan;
-    Console.WriteLine("═══════════════════════════════════════════════════════");
+    Console.WriteLine("═══════════════════════════════════════════════════════════════════");
     Console.ResetColor();
 }
 
@@ -211,7 +216,8 @@ public void RegisterUser()
         Username = username,
         Password = password,
         Balance = balance,
-        Role = "user"
+        Role = "user",
+        Online = false  // User mới tạo sẽ có trạng thái offline
     };
     
     userService.RegisterUser(user);

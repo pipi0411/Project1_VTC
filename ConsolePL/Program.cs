@@ -145,7 +145,7 @@ namespace ConsolePL
             {
                 if (role == "admin")
                 {
-                    ShowAdminMenu(adminService);
+                    ShowAdminMenu(adminService, userService, username);
                 }
                 else if (role == "user")
                 {
@@ -166,7 +166,7 @@ namespace ConsolePL
             }
         }
 
-    static void ShowAdminMenu(AdminService adminService)
+    static void ShowAdminMenu(AdminService adminService, UserService userService, string username)
     {
     var settingsService = new SettingsService();
     bool isRunning = true;
@@ -240,6 +240,7 @@ namespace ConsolePL
                 break;
             case "7":
                 Console.WriteLine("Logging out...");
+                userService.Logout(username);
                 isRunning = false;
                 break;
             default:
