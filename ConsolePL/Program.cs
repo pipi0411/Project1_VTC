@@ -104,6 +104,7 @@ namespace ConsolePL
                 // Lấy số dư tài khoản
                 var balance = userService.GetBalance(username);
                 Console.WriteLine($"\nYour current balance: {balance} VND");
+                System.Threading.Thread.Sleep(1500);
                 
                 // Kiểm tra số dư
                 decimal requiredBalance = ratePerHour; // Số tiền tối thiểu để sử dụng dịch vụ

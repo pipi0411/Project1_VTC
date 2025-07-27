@@ -12,7 +12,7 @@ public class ComputerService
     public ComputerService()
     {
         // Initialize the connection string (replace with your actual connection string)
-        connectionString = "server=sql12.freesqldatabase.com;Database=sql12790805;User Id=sql12790805;Password=4qlxQpXIpt;Port=3306";
+        connectionString = "server=sql12.freesqldatabase.com;Database=sql12792212;User Id=sql12792212;Password=4fMrp9ckSV;Port=3306";
     }
 
     public Computer GetComputerById(int id)

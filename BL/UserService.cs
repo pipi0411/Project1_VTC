@@ -185,6 +185,7 @@ namespace BL
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("❌ Invalid selection. Please select an off computer.");
                 Console.ResetColor();
+                System.Threading.Thread.Sleep(1500);
             }
         }
         else
